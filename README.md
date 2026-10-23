@@ -36,8 +36,9 @@ The tests use the public [Restful-Booker](https://restful-booker.herokuapp.com) 
 Set the credentials required for authenticated API operations:
 Get username and password from the official documentation - [username](https://restful-booker.herokuapp.com/apidoc/index.html#api-Auth), [password](https://restful-booker.herokuapp.com/apidoc/index.html#api-Auth)
 
-```bash
+
 macOS / Linux:
+```bash
 export API_USERNAME=username
 export API_PASSWORD=password
 ```
