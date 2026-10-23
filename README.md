@@ -16,11 +16,11 @@ The suite prioritizes meaningful booking lifecycle coverage, authenticated opera
 1. Clone the repository and enter the project directory, then install the locked dependencies:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/OksanaPR/restful-booker-api-tests.git
 ```
 
 ```bash
-cd <repository-name>
+cd restful-booker-api-tests.git
 ```
 
 2. Install Dependencies
@@ -60,7 +60,7 @@ The suite reads these values through `os.environ`. **Do not commit credentials f
 
 ## Running tests
 
- Switch to clone repo
+ Switch to cloned repo
 
 ```bash
 uv run pytest                # Run the complete test suite
@@ -120,20 +120,20 @@ I prioritized the core booking flow, checking that changes are really saved (not
 
 | Test | What it checks | Why I added it |
 |---|---|---|
-| `test_create_booking` | POST returns a numeric `bookingid` and echoes the submitted data | Creating a booking is the core operation; every other test depends on it |
-| `test_get_booking_by_id` | GET returns exactly the data that was submitted | Proves the data was stored, not only returned by POST |
-| `test_get_booking_ids_by_name` | Filtering by first and last name returns the created booking | Covers a documented query feature; the unique first name makes it reliable on a shared instance |
-| `test_update_booking_put` | Full update with a valid token; the response and a fresh GET show the new data | Verifies a full update is applied **and saved** |
-| `test_partial_update_booking` | PATCH changes one field; the other fields stay the same, confirmed with GET | Partial updates can accidentally overwrite unchanged fields |
-| `test_delete_booking` | DELETE returns `201` (documented); a following GET returns `404` (assumption) | Verifies deletion is observable, not only acknowledged |
+| `test_create_booking`| POST returns a numeric `bookingid` and echoes the submitted data | Creating a booking is the core operation; every other test depends on it |
+| `test_get_booking_by_id`| GET returns exactly the data that was submitted | Proves the data was stored, not only returned by POST |
+| `test_get_booking_ids_by_name`| Filtering by first and last name returns the created booking | Covers a documented query feature; the unique first name makes it reliable on a shared instance |
+| `test_update_booking_put`| Full update with a valid token; the response and a fresh GET show the new data | Verifies a full update is applied **and saved** |
+| `test_partial_update_booking`| PATCH changes one field; the other fields stay the same, confirmed with GET | Partial updates can accidentally overwrite unchanged fields |
+| `test_delete_booking`| DELETE returns `201` (documented); a following GET returns `404` (assumption) | Verifies deletion is observable, not only acknowledged |
 
 ### 2. Authentication
 
 | Test | What it checks | Why I added it |
 |---|---|---|
-| `test_auth_with_valid_credentials` | `/auth` returns a non-empty token for the documented demo credentials | All write operations depend on this token |
-| `test_invalid_authentication[wrong-username, wrong-password, empty-credentials]` | No token is returned for invalid credentials | Makes sure a token is never issued for bad credentials |
-| `test_update_booking_put`, `test_partial_update_booking`, `test_delete_booking` | Authenticated PUT, PATCH and DELETE succeed with a valid token | Exercises the documented authenticated write operations |
+| `test_auth_with_valid_credentials`| `/auth` returns a non-empty token for the documented demo credentials | All write operations depend on this token |
+| `test_invalid_authentication[wrong-username, wrong-password, empty-credentials]`| No token is returned for invalid credentials | Makes sure a token is never issued for bad credentials |
+| `test_update_booking_put`, `test_partial_update_booking`, `test_delete_booking`| Authenticated PUT, PATCH and DELETE succeed with a valid token | Exercises the documented authenticated write operations |
 
 Note: for invalid credentials the API returns `200` with `{"reason": "Bad credentials"}` instead of `401`. The documentation does not define this case, so the test records the current behavior rather than treating it as a defect.
 
@@ -155,85 +155,7 @@ Reproduction steps for each finding can be found in [docs/findings.md](docs/find
 
 ### BUG 1 - Create booking returns 500 instead of 400 when the required firstname field is missing
 
-**Steps to Reproduce**
-
-1. Prepare a valid booking payload
-2. Remove the `firstname` field
-3. Send a `POST /booking` request
-
-*Example request body:*
-
-```json
-{
-  "lastname": "qa-suite",
-  "totalprice": 150,
-  "depositpaid": true,
-  "bookingdates": {
-    "checkin": "2026-11-03",
-    "checkout": "2026-11-07"
-  },
-  "additionalneeds": "qa-test-marker"
-}
-```
-
-**Actual Result**
-
-The API responds with:
-
-```
-HTTP/1.1 500 Internal Server Error
-```
-
-- Test: `tests/test_booking.py::test_create_booking_missing_field`
-- Assertion: `assert 500 == 400`
-- Location: `tests/test_booking.py:151`
-
-![BUG 1 test report](docs/img.png)
-
-**Expected Result**
-
-The API rejects the request with HTTP 400 Bad Request and a descriptive validation message indicating that `firstname` is required.
-
 ### BUG 2 - Create accepts checkout date earlier than check-in date
-
-**Steps to Reproduce**
-
-1. Prepare a valid booking payload
-2. Set `checkin` to `2026-11-10`
-3. Set `checkout` to `2026-11-05`
-4. Send a `POST /booking` request
-
-*Example request body:*
-
-```json
-{
-  "firstname": "qa-test",
-  "lastname": "qa-suite",
-  "totalprice": 150,
-  "depositpaid": true,
-  "bookingdates": {
-    "checkin": "2026-11-10",
-    "checkout": "2026-11-05"
-  },
-  "additionalneeds": "qa-test-marker"
-}
-```
-
-**Actual Result**
-
-The API returns HTTP 200 OK and creates the booking successfully.
-
-- Test: `tests/test_booking.py::test_create_booking_checkout_before_checkin`
-- Assertion: `assert 200 == 400`
-- Location: `tests/test_booking.py:166`
-
-![BUG 2 test report](docs/img_1.png)
-
-**Expected Result**
-
-The API rejects the request with HTTP 400 Bad Request and a validation message explaining that checkout must be later than check-in.
-
----
 
 ## Future Tests and Improvements
 
@@ -254,15 +176,9 @@ Tests I would add next, in priority order:
 
 - Mark known defects with `pytest.mark.xfail(reason="BUG n: ...")`, so a run separates known bugs from new failures.
 - Add JSON Schema checks for response structure alongside the value assertions.
-- Log cleanup results in fixture teardown (deleted, already gone, or not ours).
 - Add the Ruff checks to the CI workflow and run the workflow on pull requests.
 - Separate fast smoke tests from the full suite using pytest markers.
 
-### Testing Limitations
-
-The test suite uses the publicly shared Restful-Booker API, where data may be reset or modified by other users. Each test creates independent data where applicable, and fixtures attempt cleanup after execution.
-
-These measures reduce dependencies between tests, but they cannot completely prevent failures caused by shared-environment instability.
 ## Test design and reliability
 
 - A lightweight `BookerClient` wraps `requests.Session()` and centralizes URL construction and request timeouts. It returns raw responses; assertions belong in tests, including tests expecting 4xx responses.
