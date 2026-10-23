@@ -1,4 +1,4 @@
-BUG 1 - Create booking returns 500 instead of 400 when the required firstname field is missing
+## BUG 1 - Create booking returns 500 instead of 400 when the required firstname field is missing
 
 **Steps to Reproduce**
 1. Prepare a valid booking payload
@@ -32,7 +32,7 @@ Location: tests/test_booking.py:151
 
 The API rejects the request with HTTP 400 Bad Request and a descriptive validation message indicating that firstname is required.
 
-BUG 2 - Create accepts checkout date earlier than check-in date
+## BUG 2 - Create accepts checkout date earlier than check-in date
 
 **Steps to Reproduce**
 1. Prepare a valid booking payload

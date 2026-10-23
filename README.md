@@ -206,17 +206,7 @@ Credentials are injected at runtime and are not stored in the source code.
 - Local run
 ![img.png](img.png)
 
-- **GitHub Actions run:** [View test execution](REPLACE_WITH_ACTUAL_RUN_URL)
-- **Result:** To be recorded after execution
-- **Test report:** `pytest-results` artifact containing `results.xml`
+- **GitHub Actions run:** [View test execution](https://github.com/OksanaPR/restful-booker-api-tests/actions/runs/39969561739/artifacts/12508381828)
+- **Test report:** `pytest-results` artifact containing `results.xml` and `results.html`
 
 The execution report includes test statuses, execution times, and failure information. GitHub Actions job logs provide additional debugging details.
-
-Sensitive values such as credentials and authentication tokens should not be logged.
-
-### Limitations
-
-The suite runs against a shared public API, which may be reset or modified by other users. As a result, some failures may be related to environmental instability rather than application regressions.
-
-In a production project, I would use an isolated test environment and extend this workflow to run automatically on pull requests.
-
