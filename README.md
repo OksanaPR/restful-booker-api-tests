@@ -73,7 +73,7 @@ uv run pytest -v -ra --tb=short              # Run tests with a concise failure 
 - The public API is shared and periodically reset, so transient failures or unexpected data changes may occur. 
 - Cleanup: the framework verifies a unique marker before deleting an existing booking.
 
-### 6. Code Quality
+### Code Quality
 
 This project uses [Ruff](https://docs.astral.sh/ruff/), a fast Python linter and formatter, to maintain consistent coding standards and catch potential issues early.
 
