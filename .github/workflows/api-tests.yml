@@ -28,7 +28,10 @@ jobs:
       - name: Run API tests
         run: |
           mkdir -p reports
-          uv run pytest -v -ra --tb=short --junitxml=reports/results.xml
+          uv run pytest -v -ra --tb=short \
+            --html=reports/report.html \
+            --self-contained-html \
+            --junitxml=reports/results.xml
 
       - name: Upload test report
         if: always()

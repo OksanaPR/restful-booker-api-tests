@@ -19,10 +19,6 @@ The suite prioritizes meaningful booking lifecycle coverage, authenticated opera
 git clone https://github.com/OksanaPR/restful-booker-api-tests.git
 ```
 
-```bash
-cd restful-booker-api-tests.git
-```
-
 2. Install Dependencies
 
 Install the project dependencies using uv:
@@ -38,11 +34,8 @@ No manual virtual environment activation is required when using uv run.
 The tests use the public [Restful-Booker](https://restful-booker.herokuapp.com) API by default:
 
 Set the credentials required for authenticated API operations:
-Get username and password from the official documentation.
+Get username and password from the official documentation - [username](https://restful-booker.herokuapp.com/apidoc/index.html#api-Auth), [password](https://restful-booker.herokuapp.com/apidoc/index.html#api-Auth)
 
-[username](https://restful-booker.herokuapp.com/apidoc/index.html#api-Auth)
-
-[password](https://restful-booker.herokuapp.com/apidoc/index.html#api-Auth)
 ```bash
 macOS / Linux:
 export API_USERNAME=username
@@ -55,7 +48,7 @@ $env:API_USERNAME=username
 $env:API_PASSWORD=password
 ```
 
-The suite reads these values through `os.environ`. **Do not commit credentials for private environments.** In CI, supply them through secret/variable configuration. If your local project uses `python-dotenv`, you can instead populate an ignored `.env` file and load it from `conftest.py`.
+The suite reads these values through `os.environ`. **Do not commit credentials for private environments.** In CI, supply them through secret/variable configuration. 
 
 
 ## Running tests
@@ -70,14 +63,14 @@ uv run pytest -k test_create_booking -v # Run a specific test by name
 uv run pytest -v -ra --tb=short              # Run tests with a concise failure summary
 ```
 
-5. Test Execution Notes
+**Test Execution Notes**
 
 - Tests run against the public Restful-Booker API. 
 - Test data is generated independently using pytest fixtures and unique identifiers. 
 - Created bookings are cleaned up where possible using fixture teardown. 
 - Authenticated operations use tokens obtained through the /auth endpoint. 
 - The public API is shared and periodically reset, so transient failures or unexpected data changes may occur. 
-- Cleanup is best-effort; the framework verifies a unique marker before deleting an existing booking.
+- Cleanup: the framework verifies a unique marker before deleting an existing booking.
 
 ### 6. Code Quality
 
@@ -141,9 +134,9 @@ Note: for invalid credentials the API returns `200` with `{"reason": "Bad creden
 
 | Test | Scenario | Expected | Basis | Why I added it |
 |---|---|---|---|---|
-| `test_get_nonexistent_booking[nonexistent-id, negative-id]` | GET an ID that does not exist, and a negative ID | `404` | Assumption | Clients must get a clear "not found", not an error or someone else's data |
-| `test_create_booking_missing_field` | POST without the required `firstname` | `400` | Proposed requirement (field is documented as required) | Missing required data is the most common client mistake |
-| `test_create_booking_checkout_before_checkin` | POST with checkout before checkin | `400` | Proposed requirement | Invalid date ranges create corrupt bookings |
+| `test_get_nonexistent_booking[nonexistent-id, negative-id]`| GET an ID that does not exist, and a negative ID | `404` | Assumption | Clients must get a clear "not found", not an error or someone else's data |
+| `test_create_booking_missing_field`| POST without the required `firstname` | `400` | Proposed requirement (field is documented as required) | Missing required data is the most common client mistake |
+| `test_create_booking_checkout_before_checkin`| POST with checkout before checkin | `400` | Proposed requirement | Invalid date ranges create corrupt bookings |
 
 The last two tests currently fail because of API defects (see Findings): a missing field returns `500 Internal Server Error`, and checkout before checkin is accepted and stored. If the API creates the invalid booking anyway, the test registers it for cleanup.
 
@@ -152,10 +145,8 @@ The last two tests currently fail because of API defects (see Findings): a missi
 ## Findings
 
 Reproduction steps for each finding can be found in [docs/findings.md](docs/findings.md).
-
-### BUG 1 - Create booking returns 500 instead of 400 when the required firstname field is missing
-
-### BUG 2 - Create accepts checkout date earlier than check-in date
+1. BUG 1 - Create booking returns 500 instead of 400 when the required firstname field is missing
+2. BUG 2 - Create accepts checkout date earlier than check-in date
 
 ## Future Tests and Improvements
 
@@ -178,16 +169,6 @@ Tests I would add next, in priority order:
 - Add JSON Schema checks for response structure alongside the value assertions.
 - Add the Ruff checks to the CI workflow and run the workflow on pull requests.
 - Separate fast smoke tests from the full suite using pytest markers.
-
-## Test design and reliability
-
-- A lightweight `BookerClient` wraps `requests.Session()` and centralizes URL construction and request timeouts. It returns raw responses; assertions belong in tests, including tests expecting 4xx responses.
-- Pytest fixtures provide the client, authentication, and independent booking data. Booking-related fixtures are function-scoped; the HTTP client may be session-scoped provided test-specific cookies/headers are not retained between tests.
-- Booking data is generated per test. The payload can come from a JSON template and be customized in Python; a generated identifier helps identify test-created resources.
-- Tests do not depend on IDs or resources created by other test functions.
-- Tests that create bookings **attempt authenticated cleanup even when an assertion fails**. Cleanup must avoid deleting a resource whose ownership marker no longer matches. Tests deliberately deleting a booking should handle its absence during teardown.
-- The public instance is shared and resets its data approximately every ten minutes. A reset or another user's modification can invalidate a booking between requests. Cleanup and isolation are therefore **best effort**, not guaranteed. We do not run load tests or broad security scans.
-- Unexplained failures should be classified as possible application defects, test issues, or environmental interference. A 404 after a successful POST is not automatically evidence of an application bug.
 
 ## CI Integration — GitHub Actions
 
